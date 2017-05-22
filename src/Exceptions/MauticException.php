@@ -6,5 +6,5 @@
  */
 class MauticException extends \Exception
 {
-	
+
 }

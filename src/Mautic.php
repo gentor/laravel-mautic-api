@@ -3,7 +3,6 @@
 use Princealikhan\Mautic\Factories\MauticFactory;
 use GrahamCampbell\Manager\AbstractManager;
 use Illuminate\Contracts\Config\Repository;
-use Mautic\Auth\OAuthClient;
 use Princealikhan\Mautic\Models\MauticConsumer;
 
 class Mautic extends AbstractManager
@@ -12,7 +11,7 @@ class Mautic extends AbstractManager
     /**
      * The factory instance.
      *
-     * @var \Mautic\Factory
+     * @var MauticFactory
      */
     protected $factory;
 
@@ -22,7 +21,6 @@ class Mautic extends AbstractManager
      * @param $config
      * @param $factory
      *
-     * @return void
      */
     public function __construct(Repository $config, MauticFactory $factory)
     {
@@ -56,11 +54,11 @@ class Mautic extends AbstractManager
     /**
      * Get the factory instance.
      *
-     * @return \Mautic\MauticFactory
+     * @return MauticFactory
      */
     public function getFactory()
     {
-        return $this->factory;  
+        return $this->factory;
     }
 
     /**
@@ -69,8 +67,12 @@ class Mautic extends AbstractManager
      * @param null $body
      * @return mixed
      */
-    public function request($method=null, $endpoints=null, $body=null)
+    public function request($method = null, $endpoints = null, $body = null)
     {
+        $connection = $this->factory->getDefaultConnection();
+        if (isset($connection['version']) && 'BasicAuth' == $connection['version']) {
+            return $this->factory->callMautic($method, $endpoints, $body);
+        }
 
         $consumer = MauticConsumer::whereNotNull('id')
             ->orderBy('created_at', 'desc')
@@ -78,15 +80,11 @@ class Mautic extends AbstractManager
 
         $expirationStatus = $this->factory->checkExpirationTime($consumer->expires);
 
-        if($expirationStatus==true){
-            $newToken   =  $this->factory->refreshToken($consumer->refresh_token);
-            return $this->factory->callMautic($method,$endpoints,$body,$newToken->access_token);
-        } else{
-            return $this->factory->callMautic($method,$endpoints,$body,$consumer->access_token);
+        if ($expirationStatus == true) {
+            $newToken = $this->factory->refreshToken($consumer->refresh_token);
+            return $this->factory->callMautic($method, $endpoints, $body, $newToken->access_token);
+        } else {
+            return $this->factory->callMautic($method, $endpoints, $body, $consumer->access_token);
         }
     }
-
 }
-
-
-

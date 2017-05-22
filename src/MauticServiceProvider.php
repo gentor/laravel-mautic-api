@@ -3,18 +3,19 @@
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 
-class MauticServiceProvider extends ServiceProvider {
+class MauticServiceProvider extends ServiceProvider
+{
 
-	/**
-	 * Bootstrap the application services.
-	 *
-	 * @return void
-	 */
-	public function boot()
-	{
-		// Publish Configuration File to base Path.
+    /**
+     * Bootstrap the application services.
+     *
+     * @return void
+     */
+    public function boot()
+    {
+        // Publish Configuration File to base Path.
         $this->publishes([
-            __DIR__.'/config/mautic.php' => base_path('config/mautic.php'),
+            __DIR__ . '/config/mautic.php' => base_path('config/mautic.php'),
             __DIR__ . '/migrations' => $this->app->databasePath() . '/migrations'
         ]);
     }
@@ -69,11 +70,12 @@ class MauticServiceProvider extends ServiceProvider {
     /**
      * Get the routes services provided by the provider.
      *
-     * @return routes
+     * @param Application $app
      */
-    protected function registerRoutes(Application $app) {
+    protected function registerRoutes(Application $app)
+    {
         $app['router']->group(['namespace' => 'Princealikhan\Mautic\Http\Controllers', "prefix" => "mautic"], function () {
-            require __DIR__.'/Http/routes.php';
+            require __DIR__ . '/Http/routes.php';
         });
     }
 

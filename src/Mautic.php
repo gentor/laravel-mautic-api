@@ -5,6 +5,10 @@ use GrahamCampbell\Manager\AbstractManager;
 use Illuminate\Contracts\Config\Repository;
 use Princealikhan\Mautic\Models\MauticConsumer;
 
+/**
+ * Class Mautic
+ * @package Princealikhan\Mautic
+ */
 class Mautic extends AbstractManager
 {
 
@@ -86,5 +90,36 @@ class Mautic extends AbstractManager
         } else {
             return $this->factory->callMautic($method, $endpoints, $body, $consumer->access_token);
         }
+    }
+
+    /**
+     * @param array $data
+     * @return null|object
+     */
+    public function contactCreate(array $data)
+    {
+        $companies = $userCompanies = [];
+        if (isset($data['companies'])) {
+            $companies = $data['companies'];
+            unset($data['companies']);
+        }
+
+        $response = Mautic::request('POST', 'contacts/new', $data);
+        if (!isset($response['contact'])) {
+            return null;
+        }
+
+        $user = (object)$response['contact'];
+
+        foreach ($companies as $company) {
+            $response = Mautic::request('POST', 'companies/new', $company);
+            if (isset($response['company'])) {
+                $userCompany = (object)$response['company'];
+                $userCompanies[] = $userCompany;
+                Mautic::request('POST', 'companies/' . $userCompany->id . '/contact/add/' . $user->id);
+            }
+        }
+
+        return $user;
     }
 }
